@@ -1,0 +1,17 @@
+FROM node:20-bookworm-slim
+
+RUN apt-get update -y && apt-get install -y openssl && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+COPY prisma ./prisma
+RUN npm ci
+
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+
+EXPOSE 3000
+
+# test:gate must pass or the app will not start (see tests/ and npm run test:gate)
+CMD sh -c "npm run test:gate && mkdir -p /app/data && npx prisma generate && npx prisma db push --accept-data-loss && npx next dev --hostname 0.0.0.0 --port 3000"

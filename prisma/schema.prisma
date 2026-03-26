@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String   @map("password_hash")
+  isAdmin      Boolean  @default(false) @map("is_admin")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  intakes Intake[]
+
+  @@map("users")
+}
+
+model Intake {
+  id          String   @id @default(cuid())
+  title       String
+  description String   @default("")
+  budgetRange String   @default("")
+  timeline    String   @default("")
+  industry    String   @default("")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  aiMetadata IntakeAiMetadata?
+
+  @@index([userId])
+}
+
+/// LLM-generated fields for an intake; payload is JSON: { summary, tags[], riskChecklist[] }
+model IntakeAiMetadata {
+  id        String   @id @default(cuid())
+  intakeId  String   @unique @map("intake_id")
+  payload   Json
+  model     String   @default("")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  intake Intake @relation(fields: [intakeId], references: [id], onDelete: Cascade)
+
+  @@map("intake_ai_metadata")
+}

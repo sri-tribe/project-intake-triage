@@ -1,0 +1,5 @@
+/* Global tweaks; MUI CssBaseline handles the rest */
+
+html {
+  color-scheme: dark;
+}

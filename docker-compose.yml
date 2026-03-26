@@ -1,0 +1,41 @@
+services:
+  # Local development (Node 20 inside Docker; no host Node upgrade required)
+  dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "file:/app/data/app.db"
+      WATCHPACK_POLLING: "true"
+      NODE_ENV: development
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-4o-mini}
+    volumes:
+      - .:/app
+      - dev_node_modules:/app/node_modules
+      # .next is on the bind mount (not a named volume) so webpack chunks stay in sync with the
+      # current build. A persisted .next volume often causes "Cannot find module './611.js'".
+      - sqlite_data:/app/data
+
+  # Production-style image (opt-in: docker compose --profile prod up web)
+  web:
+    profiles: [prod]
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "file:/app/data/app.db"
+      SESSION_SECRET: ${SESSION_SECRET:-}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o-mini}
+      OPENAI_FALLBACK_MODEL: ${OPENAI_FALLBACK_MODEL:-gpt-4o-mini}
+    volumes:
+      - sqlite_data:/app/data
+
+volumes:
+  sqlite_data:
+  dev_node_modules:
